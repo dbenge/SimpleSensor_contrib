@@ -4,7 +4,7 @@ Connects to websocket server host/port as defined in config.
 Attempts reconnects on disconnection.
 """
 from simplesensor.communication_modules.websocketClient import moduleConfigLoader as configLoader
-from simplesensor.threadsafeLogger import ThreadsafeLogger
+from simplesensor.sharedthreadsafeLogger import ThreadsafeLogger
 from threading import Thread
 from multiprocessing import Process
 import websocket
