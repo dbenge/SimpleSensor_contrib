@@ -1,0 +1,1 @@
+from simplesensor.communication_modules.communication_base.communicationModule import CommunicationModule as CommunicationModule
