@@ -1,7 +1,5 @@
 """
-Threaded MQTT client
-author: MaX EdeLL
-date: 12/12/2017
+MQTT client module
 """
 
 import logging
@@ -9,7 +7,7 @@ import time
 import json
 from threading import Thread
 import paho.mqtt.client as mqtt
-from threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
 
 
 class MQTTClientModule(Thread):
