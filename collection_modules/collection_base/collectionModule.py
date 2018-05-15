@@ -19,7 +19,7 @@ class CollectionModule(Process)
 	# You can keep these parameters the same, all modules receive the same params
 	# self - reference to self
 	# baseConfig - configuration settings defined in /simplesensor/config/base.conf 
-	# 				(https://github.com/AdobeAtAdobe/SimpleSensor/blob/master/config/base.conf)
+	# 			    (https://github.com/AdobeAtAdobe/SimpleSensor/blob/master/config/base.conf)
 	# pInBoundQueue - messages from handler to this module
 	# pOutBoundQueue - messages from this module to other modules
 	# loggingQueue - logging messages for threadsafe logger

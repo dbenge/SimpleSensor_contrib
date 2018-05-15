@@ -2,7 +2,7 @@
 Module specific config loader
 Any changes you make to module.conf should be reflected here
 Optionally add a secrets.conf in the same directory to stick in some secret keys.
-'''
+''' 
 
 from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
 import configparser
