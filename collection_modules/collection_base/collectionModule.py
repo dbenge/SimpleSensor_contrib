@@ -10,6 +10,8 @@ from simplesensor.shared.collectionPointEvent import CollectionPointEvent
 from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
 from multiprocessing import Process
 from threading import Thread
+
+# Module specific imports
 import random
 
 class CollectionModule(Process)
@@ -35,6 +37,8 @@ class CollectionModule(Process)
         self.outQueue = pOutBoundQueue
         self.inQueue= pInBoundQueue
         self.loggingQueue = loggingQueue
+        self.threadProcessQueue = None
+        self.alive = False
 
         # 2. Load the module's configuration file
         # Configs
@@ -57,9 +61,7 @@ class CollectionModule(Process)
     	"""
 
     	# Monitor inbound queue on own thread
-        self.threadProcessQueue = Thread(target=self.processQueue)
-        self.threadProcessQueue.setDaemon(True)
-        self.threadProcessQueue.start()
+        self.listen()
 
         # For this example, it randomly generates numbers
         # if the number is large, send a `large_number` event
@@ -73,6 +75,16 @@ class CollectionModule(Process)
         			'large_number',
         			extraData
         			)
+
+    def listen(self):
+        """
+        Start thread to monitor inbound messages, declare module alive.
+        """
+
+        self.threadProcessQueue = Thread(target=self.processQueue)
+        self.threadProcessQueue.setDaemon(True)
+        self.threadProcessQueue.start()
+        self.alive()
 
     def putMessage(self, topic, extendedData=None, recipients=['all'], localOnly=False):
     	"""
