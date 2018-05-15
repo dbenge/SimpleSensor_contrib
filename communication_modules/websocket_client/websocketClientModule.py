@@ -3,7 +3,7 @@ WebsocketClientModule
 Connects to websocket server host/port as defined in config.
 Attempts reconnects on disconnection.
 """
-from simplesensor.communication_modules.websocketClient import moduleConfigLoader as configLoader
+from simplesensor.communication_modules.websocket_client import moduleConfigLoader as configLoader
 from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
 from threading import Thread
 from multiprocessing import Process
