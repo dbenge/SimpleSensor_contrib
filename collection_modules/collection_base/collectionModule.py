@@ -1,25 +1,20 @@
 """
-Sample structure for a communication point module.
+Sample structure for a collection point module.
 This module describes the basic uses of SimpleSensor.
 To make your own module, this is a good place to start.
-
-This module will receive large_number events and log/count them,
-once the threshold is reached as set in config/module.conf, shutdown.
 """
 
-# Standard imports, usually used by all communication modules
+# Standard imports, usually used by all collection modules
 from simplesensor.collection_modules.collection_base import moduleConfigLoader as configLoader
+from simplesensor.shared.collectionPointEvent import CollectionPointEvent
 from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
 from multiprocessing import Process
 from threading import Thread
-<<<<<<< HEAD:communication_modules/communication_base/communicationModule.py
-=======
 
 # Module specific imports
 import random
->>>>>>> collection_base:collection_modules/collection_base/collectionModule.py
 
-class CommunicationModule(Process)
+class CollectionModule(Process)
 
 	# You can keep these parameters the same, all modules receive the same params
 	# self - reference to self
@@ -38,14 +33,11 @@ class CommunicationModule(Process)
         # Most collection modules will follow a similar pattern...
 
         # 1. Set up some variables on the self object
+        # Queues
         self.outQueue = pOutBoundQueue
         self.inQueue= pInBoundQueue
         self.loggingQueue = loggingQueue
         self.threadProcessQueue = None
-<<<<<<< HEAD:communication_modules/communication_base/communicationModule.py
-        self.counter = 0
-=======
->>>>>>> collection_base:collection_modules/collection_base/collectionModule.py
         self.alive = False
 
         # 2. Load the module's configuration file
@@ -54,7 +46,8 @@ class CommunicationModule(Process)
         self.config = baseConfig
 
         # 3. Set some constants to the self object from config parameters (if you want)
-        self._bigNumberThreshold = self.moduleConfig['BigNumberThreshold']
+        self._id = moduleConfig['CollectionPointId']
+        self._type = moduleConfig['CollectionPointType']
 
         # 4. Create a threadsafe logger object
         self.logger = ThreadsafeLogger(loggingQueue, __name__)
@@ -62,25 +55,11 @@ class CommunicationModule(Process)
     def run(self):
     	"""
     	Main process method, run when the thread's start() function is called.
-    	Starts monitoring inbound messages to this module.
-
-        Usually, any messages going out from communication modules to other
-        modules will depend on incoming messages.
-
-        Typically, a communication module would handle outgoing messages to
-        connected clients over some protocol, but this is a toy example.
+    	Starts monitoring inbound messages to this module, and collection logic goes here.
+    	For example, you could put a loop with a small delay to keep polling the sensor, etc.
+    	When something is detected that's relevant, put a message on the outbound queue.
     	"""
 
-<<<<<<< HEAD:communication_modules/communication_base/communicationModule.py
-        # Begin monitoring inbound queue
-        self.listen()
-
-    def listen(self):
-        self.threadProcessQueue = Thread(target=self.processQueue)
-        self.threadProcessQueue.setDaemon(True)
-        self.threadProcessQueue.start()
-        self.alive = True
-=======
     	# Monitor inbound queue on own thread
         self.listen()
 
@@ -125,7 +104,6 @@ class CommunicationModule(Process)
     		eventTime=datetime.datetime.utcnow()
     		)
     	self.outQueue.put(msg)
->>>>>>> collection_base:collection_modules/collection_base/collectionModule.py
 
     def processQueue(self):
     	"""
@@ -161,23 +139,18 @@ class CommunicationModule(Process)
     	Switch on the message topic, do something with the data fields.
     	"""
 
-        # Parameter checking, data cleaning goes here
-        try:
-            assert message._topic is not None
-            assert message._extendedData is not None
-            assert message._extendedData.the_number is not None
-        except:
-            self.logger.error('Error, invalid message: %s'%message)
-
-        if message._topic == 'large_number':
-            self.logger.info('Module %s encountered a large number: %s'%(message._sender, message._extendedData.the_number))
-            self.counter += 1
-            if self.counter > self._bigNumberThreshold:
-                self.shutdown()
+    	# neither of these are needed, just to illustrate how inbound messages could be used
+    	# in many cases, collection_modules will only collect data and send out events
+    	# with no regard for what other modules are emitting
+        if message._topic == 'hello':
+            self.logger.info('Module %s says "%s"'%(message._sender, message._topic))
+        elif message._topic == 'goodbye':
+        	self.logger.info('Module %s told me to shutdown'%message._sender)
+            self.shutdown()
 
     def shutdown(self):
     	"""
-    	Shutdown the communication module.
+    	Shutdown the collection module.
     	Set alive flag to false so it stops looping.
     	Wait for things to die, then exit.
     	"""

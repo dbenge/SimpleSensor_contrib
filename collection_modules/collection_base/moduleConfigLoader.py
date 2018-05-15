@@ -52,10 +52,18 @@ def loadModule(thisConfig, logger, configParser):
         configFilePath = os.path.join(os.path.dirname(__file__),"./config/module.conf")
         exit
 
-    """ Big number threshold """
+    """ Collection point type """
     try:
-        configValue=configParser.getint('ModuleConfig','big_number_threshold')
+        configValue=configParser.getboolean('ModuleConfig','collection_point_type')
     except:
-        configValue = 11
-    logger.info("Big number threshold: %s" % configValue)
-    thisConfig['BigNumberThreshold'] = configValue
+        configValue = 'collection_base'
+    logger.info("Collection point type : %s" % configValue)
+    thisConfig['CollectionPointType'] = configValue
+
+    """ Collection point id """
+    try:
+        configValue=configParser.getboolean('ModuleConfig','collection_point_id')
+    except:
+        configValue = 'cb1'
+    logger.info("Collection point ID : %s" % configValue)
+    thisConfig['CollectionPointId'] = configValue
