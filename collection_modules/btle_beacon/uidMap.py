@@ -1,4 +1,5 @@
 class UIDMap(object):
+	
 	""" Class to hold a dict of uid to object pairs. """
 	def __init__(self):
 		# Build dict of uid -> string pairs. Could be changed to map objects.

@@ -6,7 +6,6 @@ import logging
 import logging.config
 import time
 
-
 class RegistryEvent(object):
 
     def __init__(self, doc=None):

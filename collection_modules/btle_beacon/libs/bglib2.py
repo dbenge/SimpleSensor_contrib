@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """ Bluegiga BGAPI/BGLib implementation
 
 Changelog:

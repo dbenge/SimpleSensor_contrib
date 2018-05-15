@@ -1,5 +1,4 @@
 # This work is based on the following effort
-#
 # https://github.com/jrowberg/bglib/blob/master/Python/Examples/bled112_scanner.py
 #
 #

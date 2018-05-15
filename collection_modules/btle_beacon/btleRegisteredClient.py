@@ -7,7 +7,7 @@ import os
 import sys
 import time
 import math
-
+ 
 class BtleRegisteredClient:
     def __init__(self, detectedClient, collectionPointConfig, loggingQueue):
         self.loggingQueue = loggingQueue

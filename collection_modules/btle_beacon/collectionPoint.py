@@ -1,6 +1,6 @@
 """
 BTLE iBeacon collection module
-WIP
+WIP 
 """
 
 import sys

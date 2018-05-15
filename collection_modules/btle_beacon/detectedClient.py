@@ -1,5 +1,4 @@
-import time
-
+import time 
 class DetectedClient:
     def __init__(self,type,**kwargs):
         self.type=type

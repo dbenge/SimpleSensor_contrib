@@ -1,5 +1,5 @@
 import os.path
-import logging
+import logging 
 from simplesensor.collectionPointEvent import CollectionPointEvent
 from .btleRegisteredClient import BtleRegisteredClient
 from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
