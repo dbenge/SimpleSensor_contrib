@@ -1,0 +1,1 @@
+from simplesensor.communication_modules.websocket_client.websocketClientModule import WebsocketClientModule as CommunicationModule
