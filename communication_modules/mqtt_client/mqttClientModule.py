@@ -8,7 +8,7 @@ import json
 from threading import Thread
 import paho.mqtt.client as mqtt
 from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
-
+from . import moduleConfigLoader as configLoader
 
 class MQTTClientModule(Thread):
     """ Threaded MQTT client for processing and publishing outbound messages"""
@@ -20,15 +20,17 @@ class MQTTClientModule(Thread):
         self.alive = True
         self.inQueue = pInBoundEventQueue
 
+        # Module config
+        self.moduleConfig = configLoader.load(self.loggingQueue, __name__)
+
         # Constants
-        self._keepAlive = self.config['MqttKeepAlive']
-        self._feedName = self.config['MqttFeedName']
-        self._username = self.config['MqttUsername']
-        self._key = self.config['MqttKey']
-        self._host = self.config['MqttHost']
-        self._port = self.config['MqttPort']
-        self._publishJson = self.config['MqttPublishJson']
-        self._publishFaceValues = self.config['MqttPublishFaceValues']
+        self._keepAlive = self.moduleConfig['MqttKeepAlive']
+        self._feedName = self.moduleConfig['MqttFeedName']
+        self._username = self.moduleConfig['MqttUsername']
+        self._key = self.moduleConfig['MqttKey']
+        self._host = self.moduleConfig['MqttHost']
+        self._port = self.moduleConfig['MqttPort']
+        self._publishJson = self.moduleConfig['MqttPublishJson']
 
         # MQTT setup
         self._client = mqtt.Client()
@@ -89,7 +91,6 @@ class MQTTClientModule(Thread):
     def publishFaceValues(self, message):
         """ Publish face detection values to individual MQTT feeds
         Parses _extendedData.predictions.faceAttributes property
-        Works with Azure face API responses and 
         """
         try:
             for face in message._extendedData['predictions']:
@@ -121,7 +122,7 @@ class MQTTClientModule(Thread):
         return json.dumps(message.__dict__).encode('utf8')
 
     def processQueue(self):
-        self.logger.info('Processing queue')
+        """ Process incoming messages. """
 
         while self.alive:
             # Pump the loop
@@ -148,7 +149,7 @@ class MQTTClientModule(Thread):
                 time.sleep(.25)
 
     def shutdown(self):
-        self.logger.info("Shutting down MQTT %s" % (mp.current_process().name))
+        self.logger.info("Shutting down")
         self.alive = False
         time.sleep(1)
         self.exit = True
