@@ -1,3 +1,6 @@
+"""
+
+"""
 import os.path
 import logging 
 from simplesensor.collectionPointEvent import CollectionPointEvent

@@ -1,3 +1,6 @@
+"""
+Detected client is the raw event from the device interface.
+"""
 import time 
 class DetectedClient:
     def __init__(self,type,**kwargs):
