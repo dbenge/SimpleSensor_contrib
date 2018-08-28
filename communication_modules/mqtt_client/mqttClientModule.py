@@ -7,10 +7,10 @@ import time
 import json
 from threading import Thread
 import paho.mqtt.client as mqtt
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger, ModuleProcess, Message
 from . import moduleConfigLoader as configLoader
 
-class MQTTClientModule(Thread):
+class MQTTClientModule(ModuleProcess):
     """ Threaded MQTT client for processing and publishing outbound messages"""
 
     def __init__(self, baseConfig, pInBoundEventQueue, pOutBoundEventQueue, loggingQueue):
@@ -80,30 +80,13 @@ class MQTTClientModule(Thread):
 
     def subscribe(self, feed=False):
         """Subscribe to feed, defaults to feed specified in config"""
-        if not feed: feed = _feedName
+        if not feed: feed = self._feedName
         self._client.subscribe('{0}/feeds/{1}'.format(self._username, feed))
 
     def publish(self, value, feed=False):
         """Publish a value to a feed"""
-        if not feed: feed = _feedName
+        if not feed: feed = self._feedName
         self._client.publish('{0}/feeds/{1}'.format(self._username, feed), payload=value)
-
-    def publishFaceValues(self, message):
-        """ Publish face detection values to individual MQTT feeds
-        Parses _extendedData.predictions.faceAttributes property
-        """
-        try:
-            for face in message._extendedData['predictions']:
-                faceAttrs = face['faceAttributes']
-                for key in faceAttrs:
-                    if type(faceAttrs[key]) is dict:
-                        val = self.flattenDict(faceAttrs[key])
-                        print('val: ', val)
-                    else:
-                        val = faceAttrs[key]
-                    self.publish(val, key)
-        except Exception as e:
-            self.logger.error('Error publishing values: %s'%e)
 
     def flattenDict(self, aDict):
         """ Get average of simple dictionary of numerical values """
@@ -111,7 +94,8 @@ class MQTTClientModule(Thread):
             val = float(sum(aDict[key] for key in aDict)) / len(aDict)
         except Exception as e:
             self.logger.error('Error flattening dict, returning 0: %s'%e)
-        return val or 0
+            return 0
+        return val
 
     def publishJsonMessage(self, message):
         msg_str = self.stringifyMessage(message)
@@ -131,15 +115,14 @@ class MQTTClientModule(Thread):
                 try:
                     message = self.inQueue.get(block=False,timeout=1)
                     if message is not None and self.mqttConnected:
-                        if message == "SHUTDOWN":
+                        if (message.topic.upper()=="SHUTDOWN" and
+                            message.sender_id.lower()=='main'):
                             self.logger.debug("SHUTDOWN command handled")
                             self.shutdown()
                         else:
                             # Send message as string or split into channels
                             if self._publishJson:
                                 self.publishJsonMessage(message)
-                            elif self._publishFaceData:
-                                self.publishFaceValues(message)
                             else:
                                 self.publishValues(message)
 
