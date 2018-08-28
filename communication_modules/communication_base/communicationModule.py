@@ -9,11 +9,10 @@ once the threshold is reached as set in config/module.conf, shutdown.
 
 # Standard imports, usually used by all communication modules
 from simplesensor.collection_modules.collection_base import moduleConfigLoader as configLoader
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
-from multiprocessing import Process
+from simplesensor.shared import ThreadsafeLogger, Message, ModuleProcess
 from threading import Thread
 
-class CommunicationModule(Process)
+class CommunicationModule(ModuleProcess)
 
 	# You can keep these parameters the same, all modules receive the same params
 	# self - reference to self
@@ -87,9 +86,10 @@ class CommunicationModule(Process)
                 try:
                     message = self.inQueue.get(block=False,timeout=1)
                     if message is not None:
-                        if message == "SHUTDOWN":
-                            self.logger.info("SHUTDOWN command received on %s" % __name__)
-                            self.shutdown()
+                        if (message.topic.upper()=="SHUTDOWN" and 
+                            message.sender_id.lower()=='main'):
+                                self.logger.info("SHUTDOWN command received on %s" % __name__)
+                                self.shutdown()
                         else:
                             self.handleMessage(message)
                 except Exception as e:
@@ -107,13 +107,13 @@ class CommunicationModule(Process)
 
         # Parameter checking, data cleaning goes here
         try:
-            assert message._topic is not None
-            assert message._extendedData is not None
-            assert message._extendedData.the_number is not None
+            assert message.topic is not None
+            assert message.extended_data is not None
+            assert message.extended_data.the_number is not None
         except:
             self.logger.error('Error, invalid message: %s'%message)
 
-        if message._topic == 'large_number':
+        if message.topic == 'large_number':
             self.logger.info('Module %s encountered a large number: %s'%(message._sender, message._extendedData.the_number))
             self.counter += 1
             if self.counter > self._bigNumberThreshold:
