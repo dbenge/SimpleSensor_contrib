@@ -6,15 +6,14 @@ To make your own module, this is a good place to start.
 
 # Standard imports, usually used by all collection modules
 from simplesensor.collection_modules.collection_base import moduleConfigLoader as configLoader
-from simplesensor.shared.collectionPointEvent import CollectionPointEvent
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import Message, ThreadsafeLogger, ModuleProcess
 from multiprocessing import Process
 from threading import Thread
 
 # Module specific imports
 import random
 
-class CollectionModule(Process)
+class CollectionModule(ModuleProcess)
 
 	# You can keep these parameters the same, all modules receive the same params
 	# self - reference to self
@@ -69,12 +68,12 @@ class CollectionModule(Process)
         while self.alive:
         	anum = random.randint(1, 100000)
         	if anum > 95000:
-        		extraData = {}
-        		extraData['the_number'] = anum
-        		self.putMessage(
-        			'large_number',
-        			extraData
-        			)
+        		extendedData = {}
+        		extendedData['the_number'] = anum
+        		msg = self.buildMessage(
+        			topic='large_number',
+        			extendedData=extendedData)
+                self.putMessage(msg)
 
     def listen(self):
         """
@@ -86,24 +85,36 @@ class CollectionModule(Process)
         self.threadProcessQueue.start()
         self.alive()
 
-    def putMessage(self, topic, extendedData=None, recipients=['all'], localOnly=False):
+    def buildMessage(self, topic, extendedData={}, recipients=['communication_modules']):
     	"""
-    	Create an outgoing event object and
-    	put it onto the outgoing queue.
-    	Must at least provide message topic,
-    	rest of the params are optional.
+    	Create a Message instance.
+
+    	topic (required): message type
+        sender_id (required): id property of original sender
+        sender_type (optional): type of sender, ie. collection point type, module name, hostname, etc
+        extended_data (optional): payload to deliver to recipient(s)
+        recipients (optional): module name, which module(s) the message will be delivered to, ie. `websocket_server`.
+                                use an array of strings to define multiple modules to send to.
+                                use 'all' to send to all available modules.
+                                use 'local_only' to send only to modules with `low_cost` prop set to True.
+                                [DEFAULT] use 'communication_modules' to send only to communication modules.
+                                use 'collection_modules' to send only to collection modules.
     	"""
 
-    	msg = CollectionPointEvent(
-    		self._id, 
-    		self._type, 
-    		topic, 
-    		extendedData=extendedData, 
-    		localOnly=localOnly, 
-    		recipients=recipients, 
-    		eventTime=datetime.datetime.utcnow()
-    		)
-    	self.outQueue.put(msg)
+    	msg = Message(
+            topic=topic,
+            sender_id=self._id, 
+            sender_type=self._type, 
+            extended_data=extendedData, 
+            recipients=recipients, 
+            timestamp=datetime.datetime.utcnow())
+    	return msg
+
+    def putMessage(self, msg):
+        """
+        Put message onto outgoing queue.
+        """
+        self.outQueue.put(msg)
 
     def processQueue(self):
     	"""
@@ -121,11 +132,7 @@ class CollectionModule(Process)
                 try:
                     message = self.inQueue.get(block=False,timeout=1)
                     if message is not None:
-                        if message == "SHUTDOWN":
-                            self.logger.info("SHUTDOWN command received on %s" % __name__)
-                            self.shutdown()
-                        else:
-                            self.handleMessage(message)
+                        self.handleMessage(message)
                 except Exception as e:
                     self.logger.error("Error, unable to read queue: %s " %e)
                     self.shutdown()
@@ -142,10 +149,13 @@ class CollectionModule(Process)
     	# neither of these are needed, just to illustrate how inbound messages could be used
     	# in many cases, collection_modules will only collect data and send out events
     	# with no regard for what other modules are emitting
-        if message._topic == 'hello':
+        if message.topic == 'hello':
             self.logger.info('Module %s says "%s"'%(message._sender, message._topic))
-        elif message._topic == 'goodbye':
+        elif message.topic == 'goodbye':
         	self.logger.info('Module %s told me to shutdown'%message._sender)
+            self.shutdown()
+        elif message.topic == 'SHUTDOWN' and message.sender_id == 'main':
+            self.logger.warn("SHUTDOWN command from main handled.")
             self.shutdown()
 
     def shutdown(self):
