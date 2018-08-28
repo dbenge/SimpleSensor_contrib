@@ -3,7 +3,7 @@ Tracker
 Tracker implementation
 """
 
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger
 from time import time
 import cv2
 

@@ -5,9 +5,8 @@ Tracks faces as they move, sending only one event per fresh detection.
 Sends reset event when no faces are detected for some time set in config.
 """
 from . import moduleConfigLoader as configLoader
-from simplesensor.shared.collectionPointEvent import CollectionPointEvent
+from simplesensor.shared import Message, ThreadsafeLogger, ModuleProcess
 from .azureImagePredictor import AzureImagePredictor
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
 from .multiTracker import MultiTracker
 from multiprocessing import Process
 from .idsWrapper import IdsWrapper
@@ -21,7 +20,7 @@ import cv2
 import io
 import os
 
-class CollectionPoint(Process):
+class CollectionPoint(ModuleProcess):
 
     def __init__(self, baseConfig, pInBoundQueue, pOutBoundQueue, loggingQueue):
         """ Initialize new CamCollectionPoint instance.
@@ -169,7 +168,7 @@ class CollectionPoint(Process):
                 if check:
                     predictions = self.getPredictions(grayFrame, face)
                     if predictions:
-                        self.putCPMessage(data = {
+                        self.sendMessage(data = {
                             'detectedTime': datetime.now().isoformat('T'),
                             'predictions': predictions
                             }, 
@@ -188,7 +187,7 @@ class CollectionPoint(Process):
                 cv2.waitKey(1)
 
             if self._sendBlobs and frameCounter%6==0:
-                self.putCPMessage(data = {
+                self.sendMessage(data = {
                                     'imageArr': cv2.resize(outputImage, (self._blobWidth, self._blobHeight)) , 
                                     'time': datetime.now().isoformat('T')
                                     }, 
@@ -230,7 +229,7 @@ class CollectionPoint(Process):
 
         if self.needsReset:
             if (time.time() - self.resetStart) > 10: # 10 seconds after last face detected
-                self.putCPMessage(data=None, type="reset")
+                self.sendMessage(data=None, type="reset")
                 self.needsReset = False
 
     def applyFaceBuffer(self, x, y, w, h, b, shape):
@@ -281,7 +280,8 @@ class CollectionPoint(Process):
                 try:
                     message = self.inQueue.get(block=False,timeout=1)
                     if message is not None:
-                        if message == "SHUTDOWN":
+                        if (message.topic.upper()=="SHUTDOWN" and
+                            message.sender_id.lower()=='main'):
                             self.logger.info("SHUTDOWN command handled on %s" % __name__)
                             self.shutdown()
                         else:
@@ -298,17 +298,37 @@ class CollectionPoint(Process):
             self._sendBlobs = True
         elif message._topic == 'close-stream':
             self._sendBlobs = False
+
+    def putMessage(self, msg):
+        """
+        Put message on queue.
+        """
+        seld.outQueue.put(msg)
        
-    def putCPMessage(self, data, type):
+    def sendMessage(self, data, type):
+        """
+        Create Message object.
+        self.putMessage to queue.
+        
+        Message structure:
+        topic (required): message type
+        sender_id (required): id property of original sender
+        sender_type (optional): type of sender, ie. collection point type, module name, hostname, etc
+        extended_data (optional): payload to deliver to recipient(s)
+        recipients (optional): module name, which module(s) the message will be delivered to, ie. `websocket_server`.
+                                use an array of strings to define multiple modules to send to.
+                                use 'all' to send to all available modules.
+                                use 'local_only' to send only to modules with `low_cost` prop set to True.
+                                [DEFAULT] use 'communication_modules' to send only to communication modules.
+        """
         if type == "reset":
             # Send reset message
             self.logger.info('Sending reset message')
-            msg = CollectionPointEvent(
-                self._collectionPointId,
-                self._collectionPointType,
-                'Reset mBox',
-                None)
-            self.outQueue.put(msg)
+            msg = Message(
+                sender_id=self._collectionPointId,
+                sender_type=self._collectionPointType,
+                topic='reset')
+            self.putMessage(msg)
 
         elif type == "update":
             # Reset collection start and now needs needs reset
@@ -316,13 +336,13 @@ class CollectionPoint(Process):
             self.needsResetMux = True
 
             self.logger.info('Sending found message')
-            msg = CollectionPointEvent(
-                self._collectionPointId,
-                self._collectionPointType,
-                'Found face',
-                data['predictions']
+            msg = Message(
+                sender_id=self._collectionPointId,
+                sender_type=self._collectionPointType,
+                topic='update-found-face',
+                extended_data=data['predictions']
             )
-            self.outQueue.put(msg)
+            self.putMessage(msg)
 
         elif type == "blob":
             # Get numpy array as bytes
@@ -335,16 +355,13 @@ class CollectionPoint(Process):
             eventExtraData['imageData'] = s
             eventExtraData['dataType'] = 'image/jpeg'
 
-            # Send found message 
-            # self.logger.info('Sending blob message')
-            msg = CollectionPointEvent(
-                self._collectionPointId,
-                self._collectionPointType,
-                'blob',
-                eventExtraData,
-                False
+            msg = Message(
+                sender_id=self._collectionPointId,
+                sender_type=self._collectionPointType,
+                topic='blob',
+                extended_data=eventExtraData
             )
-            self.outQueue.put(msg)
+            self.putMessage(msg)
 
     def shutdown(self):
         self.alive = False
