@@ -1,4 +1,13 @@
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+"""
+this file has three classes.  All the classes are related to tracking clients that are in range
+
+RegistryEvent
+RegisteredClientRegistry
+RegistryEventHandler
+
+"""
+
+from simplesensor.shared import ThreadsafeLogger
 from .btleRegisteredClient import BtleRegisteredClient
 import os
 import os.path
