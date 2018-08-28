@@ -4,9 +4,8 @@ Connects to websocket server host/port as defined in config.
 Attempts reconnects on disconnection.
 """
 from simplesensor.communication_modules.websocket_client import moduleConfigLoader as configLoader
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger, ModuleProcess, Message
 from threading import Thread
-from multiprocessing import Process
 import websocket
 import time
 import json
@@ -14,7 +13,7 @@ import json
 
 
 
-class WebsocketClientModule(Process):
+class WebsocketClientModule(ModuleProcess):
 
     def __init__(self, baseConfig, pInBoundEventQueue, pOutBoundEventQueue, loggingQueue):
 
@@ -76,6 +75,7 @@ class WebsocketClientModule(Process):
 
     def onMessage(self, ws, message):
         self.logger.info("Message from websocket server: %s"%message)
+        # Could put message on the out queue here to handle incoming coms
 
     def onOpen(self, ws):
         self.alive = True
@@ -116,7 +116,8 @@ class WebsocketClientModule(Process):
                 try:
                     message = self.inQueue.get(block=False,timeout=1)
                     if message is not None:
-                        if message == "SHUTDOWN":
+                        if (message.topic.upper()=="SHUTDOWN" and
+                            message.sender_id.lower()=="main"):
                             self.logger.debug("SHUTDOWN handled")
                             self.shutdown()
                         else:
