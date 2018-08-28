@@ -7,7 +7,7 @@ RegistryEventHandler
 
 """
 
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger
 from .btleRegisteredClient import BtleRegisteredClient
 import os
 import os.path

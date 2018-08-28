@@ -1,7 +1,7 @@
 """
 """
 
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger
 from .detectedClient import DetectedClient
 from .uidMap import UIDMap as UIDMap
 import logging
@@ -11,7 +11,7 @@ import sys
 import time
 import math
  
-class BtleRegisteredClient:
+class BtleRegisteredClient(object):
     def __init__(self, detectedClient, collectionPointConfig, loggingQueue):
         self.loggingQueue = loggingQueue
         self.logger = ThreadsafeLogger(loggingQueue, __name__)

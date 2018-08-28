@@ -3,7 +3,7 @@
 #
 #
 from simplesensor.collection_modules.btle_beacon.libs import BGLib
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger
 from pprint import pprint
 from serial import Serial
 import optparse

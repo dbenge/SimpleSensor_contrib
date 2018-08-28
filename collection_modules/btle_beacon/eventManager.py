@@ -3,9 +3,8 @@
 """
 import os.path
 import logging 
-from simplesensor.collectionPointEvent import CollectionPointEvent
+from simplesensor.shared import Message, ThreadsafeLogger
 from .btleRegisteredClient import BtleRegisteredClient
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
 
 class EventManager(object):
     def __init__(self, collectionPointConfig, pOutBoundQueue, registeredClientRegistry, loggingQueue):
@@ -81,14 +80,12 @@ class EventManager(object):
 
     def __sendEventToController(self,registeredClient,eventType):
 
-        eventMessage = CollectionPointEvent(
-            self.collectionPointConfig['CollectionPointId'],
-            self.collectionPointConfig['GatewayType'],
-            eventType,
-            registeredClient.getExtendedDataForEvent(),
-            False,
-            ['all'],
-            registeredClient.lastRegisteredTime)
+        eventMessage = Message(
+            topic=eventType,
+            sender_id=self.collectionPointConfig['CollectionPointId'],
+            sender_type=self.collectionPointConfig['GatewayType'],
+            extended_data=registeredClient.getExtendedDataForEvent(),
+            timestamp=registeredClient.lastRegisteredTime)
 
         if eventType == 'clientIn':
             registeredClient.setClientInMessageSentToController()

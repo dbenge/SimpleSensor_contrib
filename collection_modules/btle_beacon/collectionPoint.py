@@ -12,14 +12,14 @@ sys.path.append('./collection_modules/btleCollectionPoint/libs')
 from simplesensor.collection_modules.btle_beacon import moduleConfigLoader as configLoader
 from devices.bluegiga.btleThread import BlueGigaBtleCollectionPointThread
 from .registeredClientRegistry import RegisteredClientRegistry
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger, ModuleProcess
 from .repeatedTimer import RepeatedTimer
 from .eventManager import EventManager
 from threading import Thread
 import multiprocessing as mp
 import time
 
-class BtleCollectionPoint(Thread):
+class BtleCollectionPoint(ModuleProcess):
 
     def __init__(self, baseConfig, pInBoundQueue, pOutBoundQueue, loggingQueue):
         """ Initialize new CamCollectionPoint instance.

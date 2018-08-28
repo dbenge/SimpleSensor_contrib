@@ -1,7 +1,7 @@
 """
 Module specific config loader
 """ 
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger
 import configparser
 import os.path
 
