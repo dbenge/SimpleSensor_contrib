@@ -1,3 +1,7 @@
+"""
+mapping id to industry for Adobe CEC project
+"""
+
 class UIDMap(object):
 	
 	""" Class to hold a dict of uid to object pairs. """

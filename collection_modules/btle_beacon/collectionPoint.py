@@ -1,6 +1,9 @@
 """
 BTLE iBeacon collection module
 WIP 
+
+RegisteredClientRegistery manages the list of clients that are in rage
+event manager controllers and handles events and figures out if the event needs to be handled and put in the list of registered clients
 """
 
 import sys
