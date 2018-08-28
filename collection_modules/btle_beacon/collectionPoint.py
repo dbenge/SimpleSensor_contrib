@@ -82,7 +82,7 @@ class BtleCollectionPoint(ModuleProcess):
                 try:
                     message = self.inQueue.get(block=False,timeout=1)
                     if message is not None:
-                        if message == "SHUTDOWN":
+                        if (message.topic=="SHUTDOWN" and message.sender_id=='main'):
                             self.logger.info("SHUTDOWN command handled on %s" % __name__)
                             self.shutdown()
                         else:
@@ -103,7 +103,7 @@ class BtleCollectionPoint(ModuleProcess):
 
     def handleMessage(self, msg):
         # Handle incoming messages, eg. from other collection points
-        return
+        pass
 
     def shutdown(self):
         self.logger.info("Shutting down")
