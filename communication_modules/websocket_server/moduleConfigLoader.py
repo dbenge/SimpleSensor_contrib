@@ -4,7 +4,7 @@ Module specific config
 import configparser
 import os.path
 import json
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
+from simplesensor.shared import ThreadsafeLogger
 
 def load(loggingQueue, name):
     """ Load module specific config into dictionary, return it"""    

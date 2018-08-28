@@ -3,9 +3,7 @@ Websocket server communication module
 """
 
 from websocket_server import WebsocketServer
-from simplesensor.shared.threadsafeLogger import ThreadsafeLogger
-from simplesensor.shared.message import Message
-from simplesensor.shared.moduleProcess import ModuleProcess
+from simplesensor.shared import Message, ThreadsafeLogger, ModuleProcess
 from . import moduleConfigLoader as configLoader
 from threading import Thread
 import sys
@@ -120,9 +118,10 @@ class WebsocketServerModule(ModuleProcess):
                 try:
                     message = self.inQueue.get(block=False,timeout=1)
                     if message is not None:
-                        if message.topic.upper() == "SHUTDOWN":
-                            self.logger.debug("SHUTDOWN handled")
-                            self.shutdown()
+                        if (message.topic.upper()=="SHUTDOWN" and 
+                            message.sender_id.lower()=='main'):
+                                self.logger.debug("SHUTDOWN handled")
+                                self.shutdown()
                         else:
                             self.handle_message(message)
                 except Exception as e:
