@@ -1,1 +1,0 @@
-from simplesensor.collection_modules.collection_base.collectionModule import CollectionModule as CollectionModule 
