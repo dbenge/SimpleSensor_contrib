@@ -83,7 +83,7 @@ class CollectionModule(ModuleProcess)
         self.threadProcessQueue = Thread(target=self.processQueue)
         self.threadProcessQueue.setDaemon(True)
         self.threadProcessQueue.start()
-        self.alive()
+        self.alive = True
 
     def buildMessage(self, topic, extendedData={}, recipients=['communication_modules']):
     	"""
