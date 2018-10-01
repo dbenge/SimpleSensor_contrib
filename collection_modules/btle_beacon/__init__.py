@@ -1,1 +1,0 @@
-from simplesensor.collection_modules.btle_beacon.collectionPoint import BtleCollectionPoint as CollectionModule 

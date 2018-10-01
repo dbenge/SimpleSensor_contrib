@@ -1,1 +1,0 @@
-from simplesensor.collection_modules.nfc_bcard_reader.collectionModule import CollectionModule as CollectionModule 
